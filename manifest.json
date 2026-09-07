@@ -1,7 +1,7 @@
 {
   "name": "Frame Optimizer",
   "short_name": "FrameCalc",
-  "start_url": "./frame_calculator.html",
+  "start_url": "/framecalc/"
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f4f1ea",
