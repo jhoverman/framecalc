@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="manifest" href="manifest.json">
+
+<link rel="icon" href="icon-192.png">
+
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<link rel="manifest" href="manifest.json">
+
+<meta name="theme-color" content="#6b4b2a">
+<meta charset="UTF-8">
+<title>Frame Calculator & Board Optimizer</title>
+
+<style>
+.logo-container {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.logo-container img {
+    width: 120px;
+    height: 120px;
+}
+body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+section {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+input {
+    width: 120px;
+    padding: 5px;
+    margin: 5px;
+}
+
+button {
+    padding: 8px 15px;
+    margin-top: 10px;
+}
+
+pre {
+    background: #f4f4f4;
+    padding: 10px;
+    white-space: pre-wrap;
+}
+</style>
+</head>
+<script>
+
+</script>
+<body>
+<div class="logo-container">
+    <img src="icon-192.png" alt="FrameCalc Logo">
+</div>
+
+<section>
+<h2>Frame Calculator</h2>
+
+<div>
+Image Height:
+<input id="imageHeight" placeholder="8 1/2">
+</div>
+
+<div>
+Image Width:
+<input id="imageWidth" placeholder="11">
+</div>
+
+<div>
+Mat Width:
+<input id="matWidth" placeholder="2">
+</div>
+
+<div>
+Board Width:
+<input id="boardWidth1" placeholder="1 5/8">
+</div>
+
+<button onclick="calculateFrame()">Calculate</button>
+
+<pre id="frameOutput"></pre>
+
+</section>
+
+<section>
+<h2>Board Optimizer</h2>
+
+<div>
+Board Length:
+<input id="boardLength" placeholder="62">
+</div>
+
+<div>
+Board Width:
+<input id="boardWidth2" placeholder="1 5/8">
+</div>
+
+<button onclick="optimizeBoard()">Optimize</button>
+
+<pre id="optimizerOutput"></pre>
+
+</section>
+
+<script>
+
+const STANDARD_FRAMES = [
+    ["4x6", 4, 6],
+	["6x6", 6, 6],
+	["4x4", 4, 4],
+    ["5x7", 5, 7],
+    ["8x10", 8, 10],
+	["10x10", 10, 10],
+    ["11x14", 11, 14],
+    ["12x16", 12, 16],
+    ["16x20", 16, 20]
+];
+
+function parseMeasure(value) {
+
+    value = value.trim();
+
+    if (value.includes(" ")) {
+        let parts = value.split(" ");
+        let whole = parseFloat(parts[0]);
+
+        let frac = parts[1].split("/");
+        return whole + Number(frac[0]) / Number(frac[1]);
+    }
+
+    if (value.includes("/")) {
+        let frac = value.split("/");
+        return Number(frac[0]) / Number(frac[1]);
+    }
+
+    return parseFloat(value);
+}
+
+function gcd(a,b){
+    return b ? gcd(b, a % b) : a;
+}
+
+function formatInches(value){
+
+    let eighths = Math.round(value * 8);
+
+    let numerator = eighths;
+    let denominator = 8;
+
+    let divisor = gcd(numerator, denominator);
+
+    numerator /= divisor;
+    denominator /= divisor;
+
+    let whole = Math.floor(numerator / denominator);
+    let remainder = numerator % denominator;
+
+    if (remainder === 0)
+        return String(whole);
+
+    if (whole === 0)
+        return `${remainder}/${denominator}`;
+
+    return `${whole} ${remainder}/${denominator}`;
+}
+
+function calculateFrame(){
+
+    let imageHeight =
+        parseMeasure(document.getElementById("imageHeight").value);
+
+    let imageWidth =
+        parseMeasure(document.getElementById("imageWidth").value);
+
+    let matWidth =
+        parseMeasure(document.getElementById("matWidth").value);
+
+    let boardWidth =
+        parseMeasure(document.getElementById("boardWidth1").value);
+
+    let openingHeight =
+        imageHeight + 2 * matWidth;
+
+    let openingWidth =
+        imageWidth + 2 * matWidth;
+
+    let outsideHeight =
+        openingHeight + 2 * boardWidth;
+
+    let outsideWidth =
+        openingWidth + 2 * boardWidth;
+
+    let totalBoard =
+        2 * outsideHeight + 2 * outsideWidth;
+
+    let output =
+`Opening:
+${formatInches(openingHeight)} × ${formatInches(openingWidth)}
+
+Outside:
+${formatInches(outsideHeight)} × ${formatInches(outsideWidth)}
+
+Board Required:
+${formatInches(totalBoard)} inches`;
+
+    document.getElementById("frameOutput").textContent = output;
+}
+
+function boardNeeded(height, width, boardWidth){
+
+    let outsideHeight = height + 2 * boardWidth;
+    let outsideWidth = width + 2 * boardWidth;
+
+    return 2 * outsideHeight + 2 * outsideWidth;
+}
+
+function getCombinations(arr, length){
+
+    let results = [];
+
+    function helper(start, combo){
+
+        if(combo.length === length){
+            results.push([...combo]);
+            return;
+        }
+
+        for(let i = start; i < arr.length; i++){
+            combo.push(arr[i]);
+            helper(i, combo);
+            combo.pop();
+        }
+    }
+
+    helper(0, []);
+    return results;
+}
+
+function optimizeBoard(){
+
+    let boardLength =
+        parseMeasure(document.getElementById("boardLength").value);
+
+    let boardWidth =
+        parseMeasure(document.getElementById("boardWidth2").value);
+
+    let validFrames = [];
+
+    STANDARD_FRAMES.forEach(frame => {
+
+        let required =
+            boardNeeded(frame[1], frame[2], boardWidth);
+
+        validFrames.push({
+            name: frame[0],
+            required: required,
+            area: frame[1] * frame[2]
+        });
+    });
+
+    let results = [];
+
+    for(let count = 1; count <= 3; count++){
+
+        let combos =
+            getCombinations(validFrames, count);
+
+        combos.forEach(combo => {
+
+            let used =
+                combo.reduce((s,f)=>s+f.required,0);
+
+            let waste =
+                boardLength - used;
+
+            if(waste >= 0){
+
+                let area =
+                    combo.reduce((s,f)=>s+f.area,0);
+
+                results.push({
+                    frames: combo.map(f=>f.name),
+                    used: used,
+                    waste: waste,
+                    area: area
+                });
+            }
+        });
+    }
+
+    results.sort((a,b)=>{
+
+        if(a.waste !== b.waste)
+            return a.waste - b.waste;
+
+        return b.area - a.area;
+    });
+
+    let output = "";
+
+    if(results.length === 0){
+
+        output =
+            "No valid frame combinations found.";
+
+    } else {
+
+        results.slice(0,10).forEach((r,i)=>{
+
+            output +=
+`#${i+1}
+${r.frames.join(", ")}
+
+Used:  ${formatInches(r.used)}"
+Waste: ${formatInches(r.waste)}"
+
+`;
+        });
+    }
+
+    document.getElementById("optimizerOutput").textContent =
+        output;
+}
+
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>

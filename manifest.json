@@ -1,0 +1,21 @@
+{
+  "name": "Frame Optimizer",
+  "short_name": "FrameCalc",
+  "start_url": "./frame_calculator.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f1ea",
+  "theme_color": "#6b4b2a",
+  "icons": [
+    {
+      "src": "icon 192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon 512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
