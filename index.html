@@ -70,22 +70,22 @@ pre {
 
 <div>
 Image Height:
-<input id="imageHeight" placeholder="8 1/2">
+<input id="imageHeight" placeholder="e.g. 8, 8.5, or 8 1/2">
 </div>
 
 <div>
 Image Width:
-<input id="imageWidth" placeholder="11">
+<input id="imageWidth" placeholder="e.g. 8, 8.5, or 8 1/2">
 </div>
 
 <div>
 Mat Width:
-<input id="matWidth" placeholder="2">
+<input id="matWidth" placeholder="e.g. 0, 1.5, or 1 1/2">
 </div>
 
 <div>
 Board Width:
-<input id="boardWidth1" placeholder="1 5/8">
+<input id="boardWidth1" placeholder="e.g. 2, 2.5, or 2 1/2">
 </div>
 
 <button onclick="calculateFrame()">Calculate</button>
@@ -99,12 +99,12 @@ Board Width:
 
 <div>
 Board Length:
-<input id="boardLength" placeholder="62">
+<input id="boardLength" placeholder="e.g. 62, 62.5, or 62 1/2">
 </div>
 
 <div>
 Board Width:
-<input id="boardWidth2" placeholder="1 5/8">
+<input id="boardWidth2" placeholder="e.g. 2, 2.5, or 2 1/2">
 </div>
 
 <button onclick="optimizeBoard()">Optimize</button>
@@ -131,20 +131,62 @@ function parseMeasure(value) {
 
     value = value.trim();
 
+    // Empty field
+    if (!value) return null;
+
+    // Mixed number: 8 1/2
     if (value.includes(" ")) {
+
         let parts = value.split(" ");
+
+        if (parts.length !== 2) return NaN;
+
         let whole = parseFloat(parts[0]);
 
         let frac = parts[1].split("/");
-        return whole + Number(frac[0]) / Number(frac[1]);
+
+        if (frac.length !== 2) return NaN;
+
+        let numerator = Number(frac[0]);
+        let denominator = Number(frac[1]);
+
+        if (
+            isNaN(whole) ||
+            isNaN(numerator) ||
+            isNaN(denominator) ||
+            denominator === 0
+        ) {
+            return NaN;
+        }
+
+        return whole + numerator / denominator;
     }
 
+    // Fraction only: 1/2
     if (value.includes("/")) {
+
         let frac = value.split("/");
-        return Number(frac[0]) / Number(frac[1]);
+
+        if (frac.length !== 2) return NaN;
+
+        let numerator = Number(frac[0]);
+        let denominator = Number(frac[1]);
+
+        if (
+            isNaN(numerator) ||
+            isNaN(denominator) ||
+            denominator === 0
+        ) {
+            return NaN;
+        }
+
+        return numerator / denominator;
     }
 
-    return parseFloat(value);
+    // Decimal or whole number
+    let result = parseFloat(value);
+
+    return isNaN(result) ? NaN : result;
 }
 
 function gcd(a,b){
@@ -188,6 +230,28 @@ function calculateFrame(){
 
     let boardWidth =
         parseMeasure(document.getElementById("boardWidth1").value);
+
+	if (
+    imageHeight === null ||
+    imageWidth === null ||
+    matWidth === null ||
+    boardWidth === null
+) {
+    document.getElementById("frameOutput").textContent =
+        "Please enter a value in all fields.";
+    return;
+}
+
+if (
+    isNaN(imageHeight) ||
+    isNaN(imageWidth) ||
+    isNaN(matWidth) ||
+    isNaN(boardWidth)
+) {
+    document.getElementById("frameOutput").textContent =
+        'Measurements must be entered as numbers, decimals, or fractions (examples: 8, 8.5, 8 1/2).';
+    return;
+}
 
     let openingHeight =
         imageHeight + 2 * matWidth;
